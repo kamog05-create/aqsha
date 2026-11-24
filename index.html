@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Менің қаржым</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: clean personal wallet, friendly and exact
+   IDEA: a bank card holding the money you have now, with a statement under it
+   PICTURE: big black balance card that shrinks with every expense
+   COLOUR and TYPE: soft grey ground, white cards, black card, coral for spending, mint for income; Montserrat
+   LAYOUT: card + month summary on top, add form, where it went, full expense table with dates */
+:root{color-scheme:dark;--bg:#0f1115;--card:#1a1d23;--ink:#f3f4f6;--mute:#9aa1ad;--line:#2c313a;--soft:#252932;--red:#ff5a4e;--mint:#2fd39a;--black:#121316}
+:root[data-theme=light],:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:500 17px/1.5 Montserrat,system-ui,sans-serif;overflow-x:clip}
+.wrap{max-width:1100px;margin:0 auto;padding:clamp(18px,3vw,36px) max(4vw,14px) 60px}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px;border-radius:10px}
+h1{font-size:24px;font-weight:800;margin:0}
+h2{font-size:20px;font-weight:700;margin:0 0 16px}
+.head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.status{font-size:13px;color:var(--mute)}
+.box{background:var(--card);border-radius:24px;padding:clamp(18px,3vw,28px);margin-bottom:18px}
+.top{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px;margin-bottom:18px}
+.top .box{margin:0}
+.wallet{background:linear-gradient(135deg,#ff5a4e 0%,#ff7a59 55%,#ffa26b 100%);color:#fff;border-radius:24px;padding:clamp(20px,3vw,30px);display:flex;flex-direction:column;justify-content:space-between;min-height:250px;position:relative;overflow:hidden}
+.wallet::after{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.35),transparent 70%)}
+.wallet .lab{color:rgba(255,255,255,.85);font-size:14px}
+#bal{font-size:clamp(38px,7vw,60px);font-weight:800;line-height:1.05;margin:6px 0;white-space:nowrap;position:relative}
+.wrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;position:relative}
+.wbtn{min-height:44px;padding:0 18px;border-radius:12px;background:rgba(0,0,0,.18);color:#fff;font-weight:600;font-size:15px}
+.wbtn:hover{background:rgba(0,0,0,.28)}
+.wbtn.main{background:#fff;color:var(--black)}
+#balForm{display:none;gap:8px;flex-wrap:wrap;position:relative}
+#balForm.show{display:flex}
+#balForm input{max-width:220px;background:#fff;color:var(--black);border:0}
+.wnote{font-size:13px;color:rgba(255,255,255,.85);position:relative}
+.mnav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}
+.mnav b{font-size:18px;font-weight:700}
+.mnav button{width:44px;height:44px;border-radius:12px;background:var(--soft);font-size:20px}
+.lab{font-size:14px;color:var(--mute)}
+#spent{font-size:clamp(30px,5vw,40px);font-weight:800;color:var(--red);white-space:nowrap;line-height:1.1;margin:2px 0 12px}
+.mini{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mini div{background:var(--soft);border-radius:14px;padding:10px 14px}
+.mini b{display:block;font-size:17px;white-space:nowrap}
+#diff{font-size:13px;color:var(--mute);margin-top:10px}
+.seg{display:inline-flex;background:var(--soft);border-radius:14px;padding:4px;margin-bottom:16px}
+.seg button{min-height:42px;padding:0 20px;border-radius:11px;font-weight:600;color:var(--mute);font-size:15px}
+.seg button.on{background:var(--red);color:#fff}
+.seg button.on[data-t=inc]{background:var(--mint);color:#06281c}
+.catrow{display:flex;gap:8px}.catrow .go{flex:none;width:auto}
+form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) minmax(0,170px) auto;gap:14px;align-items:end}
+label{display:block;font-size:14px;color:var(--mute);margin-bottom:6px}
+input{width:100%;height:48px;padding:0 14px;font-size:16px;background:var(--soft);border:1px solid transparent;border-radius:12px;font-weight:500}
+input:focus{border-color:var(--red);outline:none}
+#amt{font-size:20px;font-weight:700}
+.full{grid-column:1/-1}
+#chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 14px;border-radius:999px;background:var(--soft);font-size:15px;font-weight:600}
+.chip i{width:9px;height:9px;border-radius:50%;flex:none}
+.chip.on{background:var(--red);color:#fff}
+.chip.plus{background:none;border:1.5px dashed var(--line);color:var(--mute)}
+.go{height:48px;padding:0 26px;border-radius:12px;background:var(--red);color:#fff;font-weight:700;white-space:nowrap}
+.go.inc{background:var(--mint)}
+.ghost{height:48px;padding:0 16px;border-radius:12px;background:var(--soft);color:var(--mute);font-weight:600}
+#msg{color:var(--red);font-size:14px;min-height:1.2em;margin:10px 0 0}
+.grid2{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:18px}
+.grid2 .box{margin:0}
+.bar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;width:100%;padding:10px 12px;border-radius:14px;text-align:left}
+.bar:hover,.bar.on{background:var(--soft)}
+.bl{display:flex;align-items:center;gap:10px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bl i{width:10px;height:10px;border-radius:50%;flex:none}
+.bv{text-align:right;white-space:nowrap;font-weight:700}
+.bv small{color:var(--mute);font-size:13px;font-weight:500;margin-left:6px}
+.track{grid-column:1/-1;height:8px;background:var(--soft);border-radius:4px;overflow:hidden}
+.bar.on .track,.bar:hover .track{background:var(--card)}
+.track span{display:block;height:100%;border-radius:4px}
+#months{display:flex;gap:6px;height:210px}
+.mc{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 2px;border-radius:12px}
+.mc:hover{background:var(--soft)}
+.mv{font-size:12px;color:var(--mute);white-space:nowrap}
+.col{flex:1;width:100%;max-width:30px;position:relative;background:var(--soft);border-radius:8px}
+.col span{position:absolute;left:0;right:0;bottom:0;background:#4a505c;border-radius:8px}
+.mc.on .col span{background:var(--red)}
+.ml{font-size:13px;font-weight:600}
+.tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.tools input{max-width:280px;height:44px}
+.tools .seg{margin:0}
+.tools .chip{min-height:44px}
+#fchip{display:none}#fchip.show{display:inline-flex}
+table{width:100%;border-collapse:collapse}
+th{font-size:13px;color:var(--mute);font-weight:600;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+td.d{font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+td.c{font-weight:600;white-space:nowrap}
+td.c i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px}
+td.n{color:var(--mute);overflow-wrap:anywhere}
+td.a,th.a{text-align:right;white-space:nowrap;font-weight:700}
+td.a.exp{color:var(--red)}td.a.inc{color:var(--mint)}
+td.x{width:96px;white-space:nowrap;text-align:right}
+td.x button{width:40px;height:40px;border-radius:10px;color:var(--mute)}
+td.x button:hover{background:var(--soft);color:var(--ink)}
+tfoot td{font-weight:700;border:0}
+.empty{color:var(--mute);padding:14px 0}
+#toast{position:fixed;left:50%;bottom:20px;transform:translate(-50%,160%);background:#fff;color:var(--black);padding:10px 10px 10px 18px;border-radius:14px;display:flex;gap:12px;align-items:center;transition:transform .25s;z-index:9;max-width:calc(100vw - 32px);font-size:15px}
+#toast.show{transform:translate(-50%,0)}
+#toast button{min-height:40px;padding:0 14px;border-radius:10px;background:var(--black);color:#fff;font-weight:700}
+@media(max-width:820px){.top,.grid2{grid-template-columns:minmax(0,1fr)}form{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+@media(max-width:600px){
+  form{grid-template-columns:minmax(0,1fr)}.go,.ghost{width:100%}
+  thead{display:none}tbody tr{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 10px;padding:10px 0;border-bottom:1px solid var(--line)}
+  tbody td{border:0;padding:2px 0}td.d{grid-row:1/3}td.n{grid-column:2/4;grid-row:2;font-size:14px}td.x{grid-column:1/-1;width:auto}
+  tfoot tr{display:flex;justify-content:space-between}
+}
+@media(prefers-reduced-motion:reduce){#toast{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head"><h1>Менің қаржым</h1><span class="status" id="status">Жүктелуде…</span></div>
+
+  <div class="top">
+    <div class="wallet">
+      <div>
+        <div class="lab">Қазір қолымда</div>
+        <div id="bal">—</div>
+        <div class="wnote" id="wnote">Алдымен қазір қанша ақшаң бар екенін енгіз</div>
+      </div>
+      <div>
+        <div class="wrow" id="balBtns"><button class="wbtn main" id="setBal">Соманы енгізу</button></div>
+        <form id="balForm"><input id="balIn" inputmode="decimal" placeholder="мысалы 150000" aria-label="Қазіргі сома"><button class="wbtn main">Сақтау</button><button type="button" class="wbtn" id="balCancel">Жабу</button></form>
+      </div>
+    </div>
+    <div class="box">
+      <div class="mnav"><button id="prev" aria-label="Алдыңғы ай">‹</button><b id="mLabel"></b><button id="next" aria-label="Келесі ай">›</button></div>
+      <div class="lab">Осы айда жұмсалды</div>
+      <div id="spent">0 ₸</div>
+      <div class="mini"><div><span class="lab">Кіріс</span><b id="inc">0 ₸</b></div><div><span class="lab">Жазбалар</span><b id="cnt">0</b></div></div>
+      <div id="diff"></div>
+    </div>
+  </div>
+
+  <div class="box" id="addBox">
+    <h2 id="formTitle">Жаңа жазба</h2>
+    <div class="seg" id="seg"><button type="button" data-t="exp" class="on">Шығын</button><button type="button" data-t="inc">Кіріс</button></div>
+    <form id="form" autocomplete="off">
+      <div class="full"><label>Неге кетті (санат)</label><div id="chips"></div></div>
+      <div class="full" id="customWrap" hidden><label for="customCat">Жаңа санат атауы</label><div class="catrow"><input id="customCat" maxlength="40" placeholder="мысалы: Қарыз"><button type="button" class="go" id="addCat">Қосу</button></div></div>
+      <div><label for="amt">Сома, ₸</label><input id="amt" inputmode="decimal" placeholder="0"></div>
+      <div><label for="note">Не үшін, қалай</label><input id="note" maxlength="200" placeholder="мысалы: Magnum, апталық азық"></div>
+      <div><label for="date">Күні</label><input id="date" type="date"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="go" id="saveBtn">Қосу</button><button type="button" class="ghost" id="cancel" hidden>Болдырмау</button></div>
+    </form>
+    <p id="msg" role="status"></p>
+  </div>
+
+  <div class="grid2" style="margin-bottom:18px">
+    <div class="box"><h2>Неге қанша кетті</h2><div id="cats"></div></div>
+    <div class="box"><h2>Соңғы 6 ай</h2><div id="months"></div></div>
+  </div>
+
+  <div class="box">
+    <h2>Барлық шығындар</h2>
+    <div class="tools">
+      <div class="seg" id="scope"><button type="button" data-s="month" class="on">Осы ай</button><button type="button" data-s="all">Барлығы</button></div>
+      <input id="q" placeholder="Іздеу" aria-label="Іздеу">
+      <button class="chip on" id="fchip"></button>
+      <button class="chip plus" id="copy">Excel-ге көшіру</button>
+    </div>
+    <div id="list"></div>
+  </div>
+</div>
+
+<div id="toast"><span id="tmsg"></span><button id="undo">Қайтару</button></div>
+
+<script>
+{
+const MONTHS=['Қаңтар','Ақпан','Наурыз','Сәуір','Мамыр','Маусым','Шілде','Тамыз','Қыркүйек','Қазан','Қараша','Желтоқсан'];
+const EXP=['Тамақ','Көлік','Үй / пәтер','Кафе','Байланыс','Оқу','Киім','Денсаулық','Ойын-сауық','Сыйлық','Басқа'];
+const INC=['Стипендия','Жалақы','Курс сатылымы','Сыйлық','Басқа'];
+const PAL=['#ff5a4e','#3b82f6','#f5b700','#16b981','#a855f7','#ff8a3d','#06b6d4','#64748b','#ec4899','#84cc16','#94a3b8'];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>Math.round(n).toLocaleString('ru-RU')+' ₸';
+const sfmt=n=>(n<0?'−':'')+fmt(Math.abs(n));
+const short=v=>v>=1e6?(v/1e6).toFixed(1)+' млн':v>=1e3?Math.round(v/1e3)+' мың':String(Math.round(v));
+const pad=n=>String(n).padStart(2,'0');
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+const shift=(ym,k)=>{let[y,m]=ym.split('-').map(Number);m+=k;while(m<1){m+=12;y--}while(m>12){m-=12;y++}return y+'-'+pad(m)};
+const label=ym=>{const[y,m]=ym.split('-').map(Number);return MONTHS[m-1]+' '+y};
+const dm=d=>d.slice(8,10)+'-'+d.slice(5,7);
+const sum=a=>a.reduce((s,i)=>s+i.amount,0);
+const num=s=>parseFloat(String(s).replace(/[\s ]/g,'').replace(',','.'));
+const color=c=>{let i=EXP.indexOf(c);if(i<0)i=INC.indexOf(c);if(i<0){i=0;for(const ch of c)i=(i*31+ch.charCodeAt(0))>>>0}return PAL[i%PAL.length]};
+const newId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+
+let items=[],base=null,custom={exp:[],inc:[]},store=null,ym=today().slice(0,7),type='exp',cat=null,editing=null,filter=null,q='',scope='month',lastDel=null,tt=null;
+
+function clean(id,d){
+  if(!d||typeof d!=='object')return null;
+  const amount=Number(d.amount),date=String(d.date||'');
+  if(!(amount>0)||!/^\d{4}-\d\d-\d\d$/.test(date))return null;
+  return{id,type:d.type==='inc'?'inc':'exp',amount,cat:String(d.cat||'Басқа'),note:String(d.note||''),date,ts:Number(d.ts)||0};
+}
+const allExp=()=>sum(items.filter(i=>i.type==='exp')),allInc=()=>sum(items.filter(i=>i.type==='inc'));
+
+function render(){
+  // wallet
+  if(base==null){$('#bal').textContent='—';$('#wnote').textContent='Алдымен қазір қанша ақшаң бар екенін енгіз';$('#setBal').textContent='Соманы енгізу'}
+  else{const now=base+allInc()-allExp();$('#bal').textContent=sfmt(now);$('#wnote').textContent=now<0?'Ақша жетпей тұр':'Әр шығын осы сомадан шегеріледі';$('#setBal').textContent='Соманы түзету'}
+  // month
+  const mi=items.filter(i=>i.date.startsWith(ym)),ex=mi.filter(i=>i.type==='exp'),tE=sum(ex);
+  const prev=sum(items.filter(i=>i.type==='exp'&&i.date.startsWith(shift(ym,-1))));
+  $('#mLabel').textContent=label(ym);$('#spent').textContent=fmt(tE);
+  $('#inc').textContent=fmt(sum(mi.filter(i=>i.type==='inc')));$('#cnt').textContent=ex.length;
+  $('#diff').textContent=prev?(tE>=prev?'Өткен айдан ':'Өткен айдан ')+(tE>=prev?'+':'−')+fmt(Math.abs(tE-prev)):'Өткен айда шығын жазылмаған';
+  // categories
+  const by={};ex.forEach(i=>by[i.cat]=(by[i.cat]||0)+i.amount);
+  const rows=Object.entries(by).sort((a,b)=>b[1]-a[1]),max=rows[0]?.[1]||1;
+  $('#cats').innerHTML=rows.length?rows.map(([c,v])=>`<button class="bar${filter===c?' on':''}" data-c="${esc(c)}"><span class="bl"><i style="background:${color(c)}"></i>${esc(c)}</span><span class="bv">${fmt(v)}<small>${Math.round(v/tE*100)}%</small></span><span class="track"><span style="width:${(v/max*100).toFixed(1)}%;background:${color(c)}"></span></span></button>`).join(''):'<p class="empty">Бұл айда шығын әлі жоқ.</p>';
+  // months
+  const ms=[...Array(6)].map((_,k)=>shift(ym,k-5));
+  const mv=ms.map(m=>sum(items.filter(i=>i.type==='exp'&&i.date.startsWith(m)))),mm=Math.max(...mv,1);
+  $('#months').innerHTML=ms.map((m,k)=>`<button class="mc${m===ym?' on':''}" data-m="${m}" aria-label="${label(m)}: ${fmt(mv[k])}"><span class="mv">${mv[k]?short(mv[k]):'–'}</span><span class="col"><span style="height:${(mv[k]/mm*100).toFixed(1)}%"></span></span><span class="ml">${MONTHS[+m.slice(5)-1].slice(0,3)}</span></button>`).join('');
+  // table
+  let li=scope==='month'?mi:items;
+  if(filter)li=li.filter(i=>i.cat===filter);
+  if(q)li=li.filter(i=>(i.cat+' '+i.note).toLowerCase().includes(q));
+  li=[...li].sort((a,b)=>b.date.localeCompare(a.date)||b.ts-a.ts);
+  const fc=$('#fchip');fc.classList.toggle('show',!!filter);fc.textContent=filter?filter+'  ✕':'';
+  if(!li.length){$('#list').innerHTML=`<p class="empty">Жазба жоқ. Жоғарыдағы формадан қос.</p>`;return}
+  const te=sum(li.filter(i=>i.type==='exp'));
+  $('#list').innerHTML=`<table><thead><tr><th>Күні</th><th>Неге</th><th>Не үшін, қалай</th><th class="a">Сома</th><th></th></tr></thead><tbody>`+
+    li.map(i=>`<tr><td class="d">${dm(i.date)}${scope==='all'?'<span style="color:var(--mute);font-weight:500">-'+i.date.slice(2,4)+'</span>':''}</td><td class="c"><i style="background:${color(i.cat)}"></i>${esc(i.cat)}</td><td class="n">${esc(i.note)||'—'}</td><td class="a ${i.type}">${i.type==='inc'?'+':'−'}${fmt(i.amount)}</td><td class="x"><button data-e="${esc(i.id)}" aria-label="Өзгерту">✎</button><button data-d="${esc(i.id)}" aria-label="Өшіру">✕</button></td></tr>`).join('')+
+    `</tbody><tfoot><tr><td colspan="3">Барлық шығын</td><td class="a" style="color:var(--red)">−${fmt(te)}</td><td></td></tr></tfoot></table>`;
+}
+
+function chips(){
+  const b=type==='exp'?EXP:INC;
+  const used=[...new Set([...custom[type],...items.filter(i=>i.type===type).map(i=>i.cat)])].filter(c=>!b.includes(c));
+  const all=[...b.filter(c=>c!=='Басқа'),...used,'Басқа'];
+  $('#chips').innerHTML=all.map(c=>`<button type="button" class="chip${c===cat?' on':''}" data-c="${esc(c)}"><i style="background:${color(c)}"></i>${esc(c)}</button>`).join('')+'<button type="button" class="chip plus" id="newCat">+ Жаңа санат</button>';
+}
+function setType(t){type=t;document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('on',x.dataset.t===t));$('#saveBtn').classList.toggle('inc',t==='inc');chips()}
+const msg=t=>$('#msg').textContent=t;
+const status=t=>$('#status').textContent=t;
+function resetForm(){editing=null;cat=null;$('#amt').value='';$('#note').value='';$('#customCat').value='';$('#customWrap').hidden=true;$('#saveBtn').textContent='Қосу';$('#formTitle').textContent='Жаңа жазба';$('#cancel').hidden=true;chips()}
+function toast(t,undo){$('#tmsg').textContent=t;$('#undo').hidden=!undo;$('#toast').classList.add('show');clearTimeout(tt);tt=setTimeout(()=>$('#toast').classList.remove('show'),5000)}
+
+async function save(id,it){
+  const i=items.findIndex(x=>x.id===id),rec={id,...it};
+  if(i>=0)items[i]=rec;else items.push(rec);
+  render();chips();
+  try{await store.save(id,it);status(store.label)}catch(e){status(e?.code==='quota_exceeded'?'Орын толды: ескі жазбаларды өшір':'Сақталмады, қайта көр')}
+}
+async function del(id){
+  const it=items.find(x=>x.id===id);if(!it)return;
+  items=items.filter(x=>x.id!==id);lastDel=it;render();
+  toast('Өшірілді: '+it.cat+' '+fmt(it.amount),true);
+  try{await store.del(id)}catch{status('Өшірілмеді, қайта көр')}
+}
+
+$('#form').addEventListener('submit',e=>{
+  e.preventDefault();
+  const amount=num($('#amt').value),cc=$('#customCat').value.trim(),c=!$('#customWrap').hidden&&cc?cc:cat;
+  if(!(amount>0))return msg('Соманы жаз');
+  if(!c)return msg('Неге кеткенін (санатты) таңда');
+  msg('');
+  if(c===cc&&!custom[type].includes(c)&&!(type==='exp'?EXP:INC).includes(c)){custom[type]=[...custom[type],c.slice(0,40)];saveSettings()}
+  const id=editing||newId(),old=items.find(x=>x.id===id);
+  const it={type,amount:Math.round(amount*100)/100,cat:c.slice(0,40),note:$('#note').value.trim().slice(0,200),date:$('#date').value||today(),ts:old?old.ts:Date.now()};
+  ym=it.date.slice(0,7);
+  save(id,it);
+  toast((editing?'Сақталды: ':'Қосылды: ')+it.cat+' '+fmt(it.amount),false);
+  resetForm();$('#amt').focus();
+});
+$('#setBal').addEventListener('click',()=>{$('#balForm').classList.add('show');$('#balBtns').style.display='none';const now=base==null?'':Math.round(base+allInc()-allExp());$('#balIn').value=now;$('#balIn').focus()});
+const closeBal=()=>{$('#balForm').classList.remove('show');$('#balBtns').style.display=''};
+$('#balCancel').addEventListener('click',closeBal);
+$('#balForm').addEventListener('submit',async e=>{
+  e.preventDefault();const v=num($('#balIn').value);if(!isFinite(v))return;
+  base=v-allInc()+allExp();closeBal();render();toast('Қазіргі сома: '+sfmt(v),false);
+  saveSettings();
+});
+$('#seg').addEventListener('click',e=>{const b=e.target.closest('button');if(b){cat=null;setType(b.dataset.t)}});
+$('#scope').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;scope=b.dataset.s;document.querySelectorAll('#scope button').forEach(x=>x.classList.toggle('on',x===b));render()});
+$('#chips').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.id==='newCat'){$('#customWrap').hidden=false;cat=null;chips();$('#customCat').focus();return}
+  cat=b.dataset.c;$('#customWrap').hidden=true;$('#customCat').value='';chips();
+});
+$('#cancel').addEventListener('click',resetForm);
+function addCat(){
+  const n=$('#customCat').value.trim().slice(0,40);if(!n){$('#customCat').focus();return msg('Санат атауын жаз')}
+  msg('');
+  if(!custom[type].includes(n)&&!(type==='exp'?EXP:INC).includes(n)){custom[type]=[...custom[type],n];saveSettings()}
+  cat=n;$('#customCat').value='';$('#customWrap').hidden=true;chips();
+  toast('Санат қосылды: '+n,false);$('#amt').focus();
+}
+$('#addCat').addEventListener('click',addCat);
+$('#customCat').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addCat()}});
+async function saveSettings(){try{await store.setSettings({base,custom})}catch{status('Сақталмады, қайта көр')}}
+$('#prev').addEventListener('click',()=>{ym=shift(ym,-1);filter=null;render()});
+$('#next').addEventListener('click',()=>{ym=shift(ym,1);filter=null;render()});
+$('#months').addEventListener('click',e=>{const b=e.target.closest('[data-m]');if(b){ym=b.dataset.m;filter=null;render()}});
+$('#cats').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(b){filter=filter===b.dataset.c?null:b.dataset.c;render();if(filter)$('#list').scrollIntoView({behavior:'smooth',block:'center'})}});
+$('#fchip').addEventListener('click',()=>{filter=null;render()});
+$('#q').addEventListener('input',e=>{q=e.target.value.trim().toLowerCase();render()});
+$('#list').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.d)return del(b.dataset.d);
+  const it=items.find(x=>x.id===b.dataset.e);if(!it)return;
+  editing=it.id;cat=it.cat;setType(it.type);
+  $('#amt').value=it.amount;$('#note').value=it.note;$('#date').value=it.date;
+  $('#saveBtn').textContent='Сақтау';$('#formTitle').textContent='Жазбаны өзгерту';$('#cancel').hidden=false;
+  $('#addBox').scrollIntoView({behavior:'smooth'});$('#amt').focus({preventScroll:true});
+});
+$('#undo').addEventListener('click',()=>{if(lastDel){const{id,...it}=lastDel;lastDel=null;save(id,it)}$('#toast').classList.remove('show')});
+$('#copy').addEventListener('click',async()=>{
+  const rows=(scope==='month'?items.filter(i=>i.date.startsWith(ym)):items).slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const tsv=['Күні\tТүрі\tНеге\tНе үшін\tСома'].concat(rows.map(i=>[dm(i.date)+'-'+i.date.slice(0,4),i.type==='inc'?'Кіріс':'Шығын',i.cat,i.note.replace(/\t/g,' '),i.amount].join('\t'))).join('\n');
+  try{await navigator.clipboard.writeText(tsv);toast(rows.length+' жол көшірілді, Excel-ге қоя бер',false)}catch{toast('Көшіру мүмкін болмады',false)}
+});
+
+$('#date').value=today();
+setType('exp');render();
+
+function localMode(note){
+  const K='my-finance-items',KB='my-finance-base';
+  try{items=(JSON.parse(localStorage.getItem(K))||[]).map(d=>clean(d.id,d)).filter(Boolean)}catch{items=[]}
+  try{const b=localStorage.getItem(KB);base=b==null?null:Number(b)}catch{}
+  try{const c=JSON.parse(localStorage.getItem('my-finance-cats'));if(c)custom={exp:(c.exp||[]).map(String),inc:(c.inc||[]).map(String)}}catch{}
+  const persist=()=>{try{localStorage.setItem(K,JSON.stringify(items))}catch{}};
+  store={label:note,save:async()=>persist(),del:async()=>persist(),setSettings:async o=>{try{if(o.base!=null)localStorage.setItem(KB,String(o.base));localStorage.setItem('my-finance-cats',JSON.stringify(o.custom))}catch{}}};
+  status(note);render();chips();
+}
+
+(async()=>{
+  let db=null,user=null,uid=null;
+  try{[db,user]=await Promise.all([window.claude?.use?.('db'),window.claude?.use?.('user')])}catch{}
+  try{uid=user?await user.id():null}catch{}
+  if(!db||!uid)return localMode('Деректер тек осы браузерде сақталады');
+  const root=db.doc('data/users/'+uid+'/finance'),col=root.collection('items');
+  store={label:'Сақталды · кез келген құрылғыдан ашылады',save:(id,it)=>col.doc(id).set(it),del:id=>col.doc(id).delete(),setSettings:o=>root.set({base:o.base,cats:o.custom})};
+  const timer=setTimeout(()=>status('Деректерге қосылу баяу жүріп жатыр…'),10000);
+  root.onSnapshot(s=>{const d=s.exists?s.data():{};const b=d.base==null?NaN:Number(d.base);base=isFinite(b)?b:null;const c=d.cats||{};custom={exp:Array.isArray(c.exp)?c.exp.map(String):[],inc:Array.isArray(c.inc)?c.inc.map(String):[]};render();chips()},()=>{});
+  col.onSnapshot(snap=>{
+    items=snap.docs.map(d=>clean(d.id,d.data())).filter(Boolean);
+    if(!snap.metadata.fromCache){clearTimeout(timer);status(store.label)}
+    render();chips();
+  },err=>{clearTimeout(timer);status(err?.code==='revoked'?'Қолжетімділік жабылды':'Деректер жүктелмеді, бетті кейін аш')});
+})();
+}
+</script>
+</body>
+</html>
